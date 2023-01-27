@@ -1,3 +1,13 @@
-target
-main
-methods
+# Ignore all
+*
+
+# Unignore all with extension
+!*.*
+
+# Unignore all directories
+!*/
+
+# ignore all target directories
+target/
+
+### The above ignores all files without an extension and target directories
