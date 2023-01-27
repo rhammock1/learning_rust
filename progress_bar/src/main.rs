@@ -2,8 +2,9 @@ use indicatif::ProgressBar;
 use std::{thread, time};
 
 fn main() {
-  let bar = ProgressBar::new(100);
-  for _ in 0..1000 {
+  let total = 100;
+  let bar = ProgressBar::new(total);
+  for _ in 0..total {
       bar.inc(1);
 
       let five_hundred_millis = time::Duration::from_millis(500);
