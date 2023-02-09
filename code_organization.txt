@@ -406,4 +406,63 @@ The Glob Operator
 
 Separating Modules into Different Files
 
-  )
+  When modules get large, you might want to move the definitions to a separate
+  file.
+
+  Example
+  We'll extract `front_of_house` module to its own file. 
+
+  Filename: src/lib.rs
+  ```
+    mod front_of_house;
+    pub use crate::front_of_house::hosting;
+    pub fn eat_at_restaurant() {
+      hosting::add_to_waitlist();
+    }
+  ```
+  Place code into a new file. The compiler knows to look for this file because it 
+  came across the module declaration in the crate root with the name
+  `front_of_house`
+  
+  Filename: src/front_of_house.rs
+  ```
+    pub mod hosting {
+      pub fn add_to_waitlist();
+    }
+  ```
+
+  Note- We only need to load a file using a `mod` declaration *once* in the
+  module tree.
+  Once the compiler knows the file is part of the project (and knows where
+  in teh module tree the code resides because of where you've put the 
+  `mod` statement)
+
+  Next, we extract the hosting module to its own file. It's a bit different
+  because hosting is a child module of front_of_house, not the root.
+  We place it in a new directory that will be named for its ancestor.
+
+  Filename: src/front_of_house.rs
+  ```
+    pub mod hosting;
+  ```
+
+  Filename: src/front_of_house/hosting.rs
+  ```
+    pub fn add_to_waitlist() {}
+  ```
+
+  If we put hosting.rs in the src directory, the compiler would expect the 
+  hosting.rs code to be in a hosting module declared in the crate root, and
+  not declared as a child of the front_of_house module.
+
+  Alternate File Paths
+    For a module named front_of_house declared in the crate root, the
+    compiler will look for the module's code in:
+      * src/front_of_house.rs (what we convered)
+      * src/front_of_house/mod.rs (older style, still supported)
+
+    For a module named hosting that is a submodule of front_of_house, the
+    compiler will look for the module's code in:
+      * src/front_of_house/hosting.rs (what we covered)
+      * src/front_of_house/hosting/mod.rs (older style, still supported)
+
