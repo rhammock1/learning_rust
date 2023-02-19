@@ -1,0 +1,245 @@
+Recoverable Errors with Result
+
+  Most errors aren't serious enough to require the program to stop entirely.
+  For example, if you try to open a file and that operation fails because 
+  the file doesn’t exist, you might want to create the file instead of 
+  terminating the process.
+
+  From a previous chapter, we know the `Result` enum is defined as having
+  two variants, `Ok` and `Err`
+  ```
+    enum Result<T, E> {
+      Ok(T),
+      Err(E),
+    }
+  ```
+
+  The T and E are generic type parameters. T represents the type of the 
+  value that will be returned in a success case with the Ok variant. E 
+  represents the type of the error that will be returned in a failure case.
+  Because Result has these generic type parameters, we can use this type and
+  the functions defined on it where the successful value and error value
+  we want to return may differ.
+
+  Example:
+  Let's call a function that returns a Result value because the function
+  could fail- Attempting to open a file.
+
+  Filename: src/main.rs
+  ```
+    use std::fs::File;
+
+    fn main() {
+      let greeting_file_result = File::open("Hello.txt");
+    }
+  ```
+
+  The return type of `File::open` is a `Result<T, E>`. The parameter T has
+  been filled in by the implementation of `File::open` with the type of the
+  success value, `std::fs::File`, wich is a file handle.
+  The type of E used in the error value is `std::io::Error`. This return type
+  means the call to `File::open` might succeed and return a file handle
+  that we can read from or write to. The call might also fail: the file 
+  might not exist, or we might not have permission to access the file. 
+
+  In the case where `File::open` succeeds, the value in the variable 
+  `greeting_file_result` will be an instance of Ok that contains the file
+  handle. On failure, the value will be an instance of Err that contains 
+  more information about the kind of error that happened.
+
+  We need to add to the code above to take different actions depending
+  on the value `File::open` returns.
+
+  Filename: src/main.rs
+  ```
+    use std::fs::File;
+
+    fn main() {
+      let greeting_file_result = File::open("Hello.txt");
+
+      let greeting_file = match greeting_file_result {
+        Ok(file) => file,
+        Err(error) => panic!("Problem opening the file: {:?}", error),
+      };
+    }
+  ```
+
+  Instead of panicing here, we could also attempt creation of the file.
+
+Matching on Different Errors
+
+  The code above will panic! no matter why the function call failed. If we
+  want to take different actions for different failure reasons, we can
+  add an inner match expression.
+
+  Filename: src/main.rs
+  ```
+    use std::fs::File;
+    use std::io::ErrorKind;
+
+    fn main() {
+      let greeting_file_result = File::open("Hello.txt");
+
+      let greeting_file = match greeting_file_result {
+        Ok(file) => file,
+        Err(error) => match error.kind() {
+          ErrorKind::NotFound => match File::create("Hello.txt") {
+            Ok(fc) => fc,
+            Err(e) => panic!("Problem creating the file: {:?}", e),
+          },
+          other_error => {
+            panic!("Problem opening the file: {:?}", other_error);
+          }
+        },
+      };
+    }
+  ```
+
+  If attempting to open the file fails because the file doesn't exist, then
+  we want to create it. However, creating the file could fail too, so we
+  need another match expression to handle this. 
+
+Alternatives to using match with Result<T, E>
+
+  The match expression is useful, but also very primitive. Closures are 
+  often used with many of the methods defined on Result and are more
+  concise than using match.
+
+  Example: Write the same logic, using closures and the `unwrap_or_else`
+  method.
+
+  Filename: src/main.rs
+  ```
+    use std::fs::File;
+    use std::io::ErrorKind;
+
+    fn main() {
+      let greeting_file = File::open("Hello.txt").unwrap_or_else(|error| {
+        if error.kind() == ErrorKind::NotFound {
+          File::create("Hello.txt").unwrap_or_else(|error| {
+            panic!("Problem creating the file: {:?}", error);
+          })
+        } else {
+          panic!("Problem opening the file: {:?}", error);
+        }
+      });
+    }
+  ```
+
+Shortcuts for Panic on Error: unwrap and expect
+
+  Using match works well enough, but it can be verbose and doesn't
+  always communicate intent well. The Result type has many helper
+  methods defined on it to do various, more specific tasks. 
+  The unwrap method is a shortcut method implemented just like the match
+  expression. If the Result value is the Ok variant, unwrap will return
+  the value inside the Ok. If the Result is the Err variant, unwrap will
+  call the `panic!` macro for us. 
+
+  Filename: src/main.rs
+  ```
+    use std::fs::File;
+
+    fn main() {
+      let greeting_file = File::open("Hello.txt").unwrap();
+    }
+  ```
+  If we run this code without a Hello.txt file, we'll see an error 
+  message from the `panic!` call that the unwrap method makes.
+
+  Similarly, the expect method lets us choose the `panic!` error message.
+  Using expect instead of unwrap, and providing good error messages can
+  convey your intent and make tracking down the source of panic easier.
+
+  ```
+    use::std::fs::File;
+
+    fn main() {
+      let greeting_file = File::open("Hello.txt")
+        .expect("Hello.txt should be included in the project");
+    }
+  ```
+
+  We use expect in the same way as unwrap: to return the value from Ok
+  or call the panic! macro. In production-quality code, it's best practice
+  to choose expect rather than unwrap because you can get more information
+  for debugging. 
+
+Propagating Errors
+
+  When a function's implementation calls something that might fail,
+  instead of handling the error within the function itself, you can
+  return the error to the calling code so that it can decide what to do.
+
+  Filename: src/main.rs
+  ```
+    use std::fs::File;
+    use std::io::{self, Read};
+
+    fn read_username_from_file() -> Result<String, io::Error> {
+      let username_file_result = File::open("Hello.txt");
+
+      let mut username_file = match username_file_result {
+        Ok(file) => file,
+        Err(e) => return Err(e),
+      };
+
+      let mut username = String::new();
+
+      match username_file.read_to_string(&mut username) {
+        Ok(_) => Ok(username),
+        Err(e) => Err(e),
+      }
+    }
+  ```
+
+  This function can be written in a much shorter way, but we do a lot 
+  manually in order to explore error handling.
+  If this function succeeds without any problems, the code that calls this
+  function will receive an Ok value that holds a String. If it fails, the
+  value received will be an Err. In the Err case, instead of calling panic!
+  we use the return keyword to return early out of the function entirely.
+  The `read_to_string` method reads the contents of the file into the variable.
+
+  This pattern of error propagation is so common that Rust provides the
+  `?` operator to make this easier.
+
+  Filename: src/main.rs
+  ```
+    use std::fs::File;
+    use std::io::{self, Read};
+
+    fn read_username_from_file() -> Result<String, io::Error> {
+      let mut username_file = File::open("Hello.txt");
+      let mut username = String::new();
+
+      username_file.read_to_string(&mut username)?;
+      Ok(username)
+    }
+  ```
+  The `?` placed after a Result value is defined to work in almost the same
+  way as the match expression. If the value of the Result is an Ok, the 
+  value inside the Ok will get returned from this expression. If the value
+  is an Err, the Err will be returned from the whole function as if we had
+  used the return keyword
+
+  There is a difference between what the match expression does and what 
+  the ? operator does. Error values that have the ? operator called on 
+  them go through the from function, defined in the From trait in the 
+  Standard Library, which is used to convert values from one type into another.
+
+  The ? operator even enables the chaining of method calls. (like optional
+  chaining in JS, but it will exit the function with an Err if it occurs)
+
+  Reading a file into a string is fairly common, so the standard library
+  provides the `fs::read_to_string` function that opens the file, creates
+  a new `String`, reads the contents of the file, puts the contents into
+  that String, and returns it. 
+
+  The ? operator can only be used in functions whose return ttpe is compatible
+  with the value the ? is used on. The ? operator is defined to perform an
+  early return of a value out of the function. The return type of the function
+  has to be a Result. We’re only allowed to use the ? operator in a function 
+  that returns Result, Option, or another type that implements FromResidual.
+
+

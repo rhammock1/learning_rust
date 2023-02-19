@@ -1,0 +1,93 @@
+In many cases, Rust requires you to acknowledge the possibility of an
+error and take some action beofre your code will compile
+
+There are two major types of errors- recoverable and unrecoverable
+Recoverable errors are `file not found` or something like that- we most
+likely want to report the problem to the user and retry the operation
+Unrecoverable errors are always symptoms of bugs, like trying to access
+a location beyond the end of an array, so we want to immediately
+stop the program. 
+
+Most languages don't distinguish the two kinds of errors and handles 
+both with mechanisms such as exceptions. Rust handles each type differently.
+
+Rust uses the Result<T, E> for recoverable errors and the `panic!` macro
+that stops execution when the program encounters an unrecoverable error.
+
+
+Unrecoverable errors with panic!
+
+  There are two ways to cause a panic: by taking an action that causes
+  our code to panic (like accessing an array out-of-bounds), or by explicitly
+  calling the `panic!` macro.
+
+  In both cases, we cause a panic in our program. By default, these panics
+  will print a failure message, unwind, clean up the stack, and quit.
+  Through an Environment Variable, you can also have Rust display the
+  call stack when a panic occurs to make it easier to track down the 
+  source of the panic. 
+
+Unwinding the Stack or Aborting in Response to a Panic
+
+  By default, when a panic occurs, the program starts unwinding, which means
+  Rust walks back up the stack and cleans up the data from each function
+  it encounters. However, this is a lot of work, therefore, Rust allows
+  you to choose the alternative of immediately aborting, which ends the
+  program without cleaning up. 
+
+  Memory that the program was using will then need to be cleaned up by
+  operating system. If your project binary needs to be as small as possible,
+  you can switch from unwinding to aborting upon a panic by adding 
+  `panic = 'abort'` to the `[profile]` sections in `Cargo.toml`.
+  
+  Example:
+  Filename: Cargo.toml
+  ```
+    // To abort on panic in RELEASE mode 
+    [profile.release]
+    panic = 'abort'
+
+    // Same could be done for DEBUG mode
+  ```
+
+  Filename: src/main.rs
+  ```
+    fn main() {
+      // Seems kind of like throwing an error in JS, but it completely
+      // exits the program
+      panic!("crash and burn");
+    }
+  ```
+
+  The call to `panic!` ends our program execution and displays the panic 
+  message and the place in our source code where the panic occurred.
+
+  In this case, the line indicated is part of our code. In other cases, the
+  call might be in code that our code calls, and the filename and line 
+  reported by the error message will be someone's code. We can use the 
+  `RUST_BACKTRACE=1` env variable to figure out the part of our code
+  causing the problem.
+
+Using a panic! Backtrace
+
+  Filename: src/main.rs
+  ```
+    fn main() {
+      let v = vec![1, 2, 3];
+
+      v[99];
+    }
+  ```
+
+  Here we are attempting to access the 100th element of our vector, but
+  the vector only has 3 elements. In this situation, Rust will panic. 
+  In C, attempting to read beyond the end of a data structure is undefined
+  behavior. This is called *buffer overread* and can lead to security
+  vulnerabilities if an attacker is able to manipulate the index in such
+  a way as to read data they shouldn't be allowed to that is stored after
+  the data structure.
+
+  To protect against this, Rust will stop program execution and refuse to 
+  continue. We can use the backtrace to find what code our code called and 
+  where the error originated. Backtraces with in-depth information are
+  only available in Debug mode. 
