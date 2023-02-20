@@ -1,0 +1,78 @@
+Generic Types, Traits, and Lifetimes
+
+  In Rust, generics are abstract stand-ins for concrete types or other properties.
+  (Basically a placeholder)
+  We can express behavior or how they relate to other generics without knowing
+  what will be in their place.
+
+  Functions can take parameters of a generic type to run the same code on 
+  multiple concrete values. We've already explored generics a bit previously.
+  Option<T>, Vec<T>, HashMap<K, V>, Result<T, E> (T-Type, K-Key, V-Value, E-Err)
+
+Removing Duplication by Extracting a Function
+
+  Generics allow us to replace specific types with a placeholder that represents
+  multiple types to remove code duplication. 
+
+  Example- Removing duplication without generics
+  Filename: src/main.rs
+  ```
+    fn main() {
+      let number_list = vec![1, 2, 3, 4, 5, 6];
+
+      let mut largest = &number_list[0];
+
+      for number in &number_list {
+        if number > largest {
+          largest = number;
+        }
+      }
+
+      println!("The largest number is {largest}");
+    
+      let number_list vec![100, 2, 4, 33, 34];
+
+      let mut largest = &number_list[0];
+
+      for number in &number_list {
+        if number > largest {
+          largest = number;
+        }
+      }
+    }
+  ```
+
+  To eliminate the duplication of finding two sets of large numbers, we can
+  abstract this logic to a new function. 
+  Filename: src/main.rs
+  ```
+    fn largest(list: &[i32]) -> &i32 {
+      let mut largest = &list[0];
+
+      for item in list {
+        if item > largest {
+          largest = item;
+        }
+      }
+      largest
+    }
+
+    fn main() {
+      let number_list = vec![34, 23, 234, 23423, 54]
+
+      let result = largest(&number_list);
+      println!("The largest number is {result}");
+
+      let number_list = vec![23, 27, 34, 21, 3, 9];
+
+      let result = largest(&number_list);
+      println!("The largest number is {result}");
+    }
+  ```
+  The largest function has a parameter called list, which represents any
+  concrete slice of i32 values we might pass into the function. When we
+  call this function, the code runs on the specific values that we pass in.
+
+  If we needed a function to find the largest item in a slice of numbers and 
+  a slice of char values, how would we eliminate that duplication?
+
