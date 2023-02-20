@@ -8,11 +8,14 @@ use tetra::{Context, ContextBuilder, State};
 const WINDOW_HEIGHT: f32 = 480.0;
 const WINDOW_WIDTH: f32 = 640.0;
 
+const PADDLE_SPEED: f32 = 16.0;
+
 struct GameState {
   // We add texture to our game struct so that the texture stays
   // loaded until the game is closed.
   // Texture is effectively an id, so it's cheap to clone.
   paddle_texture: Texture,
+  paddle_position: Vec2<f32>,
 }
 
 impl GameState {
@@ -20,7 +23,16 @@ impl GameState {
     // Texture is a type that represents image data that has been loaded
     // into graphics memory.
     let paddle_texture = Texture::new(ctx, "./resources/player1.png")?;
-    Ok(GameState {paddle_texture})
+
+    let paddle_position = Vec2::new(
+      16.0,
+      // Offset so that the paddle is vertically centered on start up.
+      (WINDOW_HEIGHT - paddle_texture.height() as f32) / 2.0,
+    );
+    Ok(GameState {
+      paddle_texture,
+      paddle_position,
+    })
   }
 }
 
@@ -31,7 +43,27 @@ impl State for GameState {
     // Draws the paddle to the screen at position (16, 16).
     // According to the docs, the second parameter is of the type
     // Into<DrawParams>, but Vec2 is automatically converted to this type.
-    self.paddle_texture.draw(ctx, Vec2::new(16.0, 16.0));
+    self.paddle_texture.draw(ctx, self.paddle_position);
+
+    Ok(())
+  }
+
+  fn update(&mut self, ctx: &mut Context) -> tetra::Result {
+    if input::is_key_down(ctx, Key::W) {
+      self.paddle_position.y -= PADDLE_SPEED;
+    }
+
+    if input::is_key_down(ctx, Key::A) {
+      self.paddle_position.x -= PADDLE_SPEED;
+    }
+
+    if input::is_key_down(ctx, Key::S) {
+      self.paddle_position.y += PADDLE_SPEED;
+    }
+
+    if input::is_key_down(ctx, Key::D) {
+      self.paddle_position.x += PADDLE_SPEED;
+    }
 
     Ok(())
   }
