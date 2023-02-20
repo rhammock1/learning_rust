@@ -70,20 +70,38 @@ impl State for GameState {
   fn update(&mut self, ctx: &mut Context) -> tetra::Result {
     /*             Player 1 Controls               */
     if input::is_key_down(ctx, Key::W) {
+      // Up
       self.player1.position.y -= PADDLE_SPEED;
     }
 
     if input::is_key_down(ctx, Key::S) {
+      // Down
       self.player1.position.y += PADDLE_SPEED;
+    }
+
+    // Make sure the paddle doesn't go off the screen.
+    if self.player1.position.y > WINDOW_HEIGHT - self.player1.texture.height() as f32 {
+      self.player1.position.y = WINDOW_HEIGHT - self.player1.texture.height() as f32;
+    } else if self.player1.position.y < 0 as f32 {
+      self.player1.position.y = 0 as f32;
     }
 
     /*             Player 2 Controls               */
     if input::is_key_down(ctx, Key::Up) {
+      // Up
       self.player2.position.y -= PADDLE_SPEED;
     }
 
     if input::is_key_down(ctx, Key::Down) {
+      // Down
       self.player2.position.y += PADDLE_SPEED;
+    }
+
+    // Make sure the paddle doesn't go off the screen.
+    if self.player2.position.y > WINDOW_HEIGHT - self.player2.texture.height() as f32 {
+      self.player2.position.y = WINDOW_HEIGHT - self.player2.texture.height() as f32;
+    } else if self.player2.position.y < 0 as f32 {
+      self.player2.position.y = 0 as f32;
     }
 
     Ok(())
