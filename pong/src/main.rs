@@ -10,17 +10,24 @@ const WINDOW_HEIGHT: f32 = 480.0;
 const WINDOW_WIDTH: f32 = 640.0;
 
 const PADDLE_SPEED: f32 = 16.0;
+const BALL_SPEED: f32 = 5.0;
 
 struct Entity {
   texture: Texture,
   position: Vec2<f32>,
+  velocity: Vec2<f32>,
 }
 
 impl Entity {
   fn new(texture: Texture, position: Vec2<f32>) -> Entity {
+    Entity::with_velocity(texture, position, Vec2::zero())
+  }
+
+  fn with_velocity(texture: Texture, position: Vec2<f32>, velocity: Vec2<f32>) -> Entity {
     Entity {
       texture,
       position,
+      velocity,
     }
   }
 }
@@ -58,11 +65,12 @@ impl GameState {
       WINDOW_WIDTH / 2.0 - ball_texture.width() as f32 / 2.0,
       WINDOW_HEIGHT / 2.0 - ball_texture.height() as f32 / 2.0,
     );
+    let ball_veloctiy = Vec2::new(-BALL_SPEED, 0.0);
 
     Ok(GameState {
       player1: Entity::new(player1_texture, player1_position),
       player2: Entity::new(player2_texture, player2_position),
-      ball: Entity::new(ball_texture, ball_position),
+      ball: Entity::with_velocity(ball_texture, ball_position, ball_veloctiy),
     })
   }
 }
@@ -117,6 +125,8 @@ impl State for GameState {
     } else if self.player2.position.y < 0 as f32 {
       self.player2.position.y = 0 as f32;
     }
+
+    self.ball.position += self.ball.velocity;
 
     Ok(())
   }
