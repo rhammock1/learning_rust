@@ -15,22 +15,31 @@ const PADDLE_SPIN: f32 = 4.0;
 const BALL_SPEED: f32 = 5.0;
 const BALL_ACC: f32 = 0.05;
 
+enum Entity_Type {
+  Player,
+  Ball,
+}
+
 struct Entity {
   texture: Texture,
   position: Vec2<f32>,
   velocity: Vec2<f32>,
+  score: i32,
+  entity_type: Entity_Type,
 }
 
 impl Entity {
   fn new(texture: Texture, position: Vec2<f32>) -> Entity {
-    Entity::with_velocity(texture, position, Vec2::zero())
+    Entity::with_velocity(texture, position, Vec2::zero(), Entity_Type::Player)
   }
 
-  fn with_velocity(texture: Texture, position: Vec2<f32>, velocity: Vec2<f32>) -> Entity {
+  fn with_velocity(texture: Texture, position: Vec2<f32>, velocity: Vec2<f32>, entity_type: Entity_Type) -> Entity {
     Entity {
       texture,
       position,
       velocity,
+      entity_type,
+      score: 0,
     }
   }
 
@@ -61,6 +70,21 @@ impl Entity {
       self.position.x + self.width() / 2.0,
       self.position.y + self.height() / 2.0,
     )
+  }
+
+  fn reset(&mut self) -> () {
+    match self.entity_type {
+      Entity_Type::Player => {
+        self.position.y = (WINDOW_HEIGHT - self.texture.height() as f32) / 2.0
+      },
+      Entity_Type::Ball => {
+        // used to reset the ball to the center of the screen
+        self.position.x = WINDOW_WIDTH / 2.0 - self.width() / 2.0;
+        self.position.y = WINDOW_HEIGHT / 2.0 - self.height() / 2.0;
+        self.velocity.x = -(self.velocity.x.signum()) * BALL_SPEED;
+        self.velocity.y = 0.0;
+      }
+    }
   }
 }
 
@@ -102,7 +126,7 @@ impl GameState {
     Ok(GameState {
       player1: Entity::new(player1_texture, player1_position),
       player2: Entity::new(player2_texture, player2_position),
-      ball: Entity::with_velocity(ball_texture, ball_position, ball_veloctiy),
+      ball: Entity::with_velocity(ball_texture, ball_position, ball_veloctiy, Entity_Type::Ball),
     })
   }
 }
@@ -193,13 +217,19 @@ impl State for GameState {
 
     /*        Score Counting          */
     if self.ball.position.x < 0.0 {
-      window::quit(ctx);
-      println!("Player 2 wins!");
+      self.player2.score += 1;
+      self.player1.reset();
+      self.player2.reset();
+      self.ball.reset();
+      println!("Player 2 score: {}", self.player2.score);
     }
 
     if self.ball.position.x > WINDOW_WIDTH {
-        window::quit(ctx);
-        println!("Player 1 wins!");
+      self.player1.score += 1;
+      self.player1.reset();
+      self.player2.reset();
+      self.ball.reset();
+      println!("Player 1 score: {}", self.player1.score);
     }
 
     Ok(())
