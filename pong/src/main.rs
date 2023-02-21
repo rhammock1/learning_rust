@@ -14,6 +14,9 @@ const PADDLE_SPIN: f32 = 4.0;
 const BALL_SPEED: f32 = 5.0;
 const BALL_ACC: f32 = 0.05;
 
+// Game Paramters
+const WINNING_SCORE: i32 = 5;
+
 enum EntityType {
   Player,
   Ball,
@@ -92,6 +95,7 @@ struct GameState {
   player2: Entity,
   ball: Entity,
   score: Text,
+  winner: String,
 }
 
 impl GameState {
@@ -132,6 +136,7 @@ impl GameState {
       player2: Entity::new(player2_texture, player2_position),
       ball: Entity::with_velocity(ball_texture, ball_position, ball_veloctiy, EntityType::Ball),
       score: score_text,
+      winner: String::from(""),
     })
   }
 }
@@ -145,13 +150,22 @@ impl State for GameState {
     // Into<DrawParams>, but Vec2 is automatically converted to this type.
     self.player1.texture.draw(ctx, self.player1.position);
     self.player2.texture.draw(ctx, self.player2.position);
-    self.ball.texture.draw(ctx, self.ball.position);
+    if self.winner == "" {
+      self.ball.texture.draw(ctx, self.ball.position);
+    }
 
     // Draw the score
     let score_text = format!("{} - {}", self.player1.score, self.player2.score);
     self.score = Text::new(score_text, Font::vector(ctx, "./resources/Arial.ttf", 32.0)?);
     self.score.draw(ctx, Vec2::new(WINDOW_WIDTH / 2.2, 16.0)); // Doesn't exactly center the text
     // need to get the bounds of the text and use that to calculate the center
+
+    if self.winner != "" {
+      let win_text = format!("{} Wins!", self.winner);
+      let mut winner_text = Text::new(win_text, Font::vector(ctx, "./resources/Arial.ttf", 48.0)?);
+      winner_text.draw(ctx, Vec2::new(WINDOW_WIDTH / 2.0, WINDOW_HEIGHT / 2.0));
+      // Add play again button that resets everything
+    }
 
     Ok(())
   }
@@ -239,6 +253,12 @@ impl State for GameState {
       self.player1.reset();
       self.player2.reset();
       self.ball.reset();
+    }
+
+    if self.player1.score == WINNING_SCORE {
+      self.winner = String::from("Player 1");
+    } else if self.player2.score == WINNING_SCORE {
+      self.winner = String::from("Player 2");
     }
 
     Ok(())
