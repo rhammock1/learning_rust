@@ -1,7 +1,6 @@
-use tetra::graphics::{self, Color, Rectangle, Texture};
+use tetra::graphics::{self, Color, Rectangle, Texture, text::{Font, Text}};
 use tetra::input::{self, Key}; // Key Press
 use tetra::math::Vec2;
-use tetra::window;
 use tetra::{Context, ContextBuilder, State};
 
 // It will be easier to use these values as floats and cast to i32 when
@@ -15,7 +14,7 @@ const PADDLE_SPIN: f32 = 4.0;
 const BALL_SPEED: f32 = 5.0;
 const BALL_ACC: f32 = 0.05;
 
-enum Entity_Type {
+enum EntityType {
   Player,
   Ball,
 }
@@ -25,15 +24,15 @@ struct Entity {
   position: Vec2<f32>,
   velocity: Vec2<f32>,
   score: i32,
-  entity_type: Entity_Type,
+  entity_type: EntityType,
 }
 
 impl Entity {
   fn new(texture: Texture, position: Vec2<f32>) -> Entity {
-    Entity::with_velocity(texture, position, Vec2::zero(), Entity_Type::Player)
+    Entity::with_velocity(texture, position, Vec2::zero(), EntityType::Player)
   }
 
-  fn with_velocity(texture: Texture, position: Vec2<f32>, velocity: Vec2<f32>, entity_type: Entity_Type) -> Entity {
+  fn with_velocity(texture: Texture, position: Vec2<f32>, velocity: Vec2<f32>, entity_type: EntityType) -> Entity {
     Entity {
       texture,
       position,
@@ -74,10 +73,10 @@ impl Entity {
 
   fn reset(&mut self) -> () {
     match self.entity_type {
-      Entity_Type::Player => {
+      EntityType::Player => {
         self.position.y = (WINDOW_HEIGHT - self.texture.height() as f32) / 2.0
       },
-      Entity_Type::Ball => {
+      EntityType::Ball => {
         // used to reset the ball to the center of the screen
         self.position.x = WINDOW_WIDTH / 2.0 - self.width() / 2.0;
         self.position.y = WINDOW_HEIGHT / 2.0 - self.height() / 2.0;
@@ -92,6 +91,7 @@ struct GameState {
   player1: Entity,
   player2: Entity,
   ball: Entity,
+  score: Text,
 }
 
 impl GameState {
@@ -123,10 +123,15 @@ impl GameState {
     );
     let ball_veloctiy = Vec2::new(-BALL_SPEED, 0.0);
 
+    /* Score Set Up */
+    let score_text = format!("{} - {}", 0, 0);
+    let score_text = Text::new(score_text, Font::vector(ctx, "./resources/Arial.ttf", 32.0)?);
+
     Ok(GameState {
       player1: Entity::new(player1_texture, player1_position),
       player2: Entity::new(player2_texture, player2_position),
-      ball: Entity::with_velocity(ball_texture, ball_position, ball_veloctiy, Entity_Type::Ball),
+      ball: Entity::with_velocity(ball_texture, ball_position, ball_veloctiy, EntityType::Ball),
+      score: score_text,
     })
   }
 }
@@ -141,6 +146,12 @@ impl State for GameState {
     self.player1.texture.draw(ctx, self.player1.position);
     self.player2.texture.draw(ctx, self.player2.position);
     self.ball.texture.draw(ctx, self.ball.position);
+
+    // Draw the score
+    let score_text = format!("{} - {}", self.player1.score, self.player2.score);
+    self.score = Text::new(score_text, Font::vector(ctx, "./resources/Arial.ttf", 32.0)?);
+    self.score.draw(ctx, Vec2::new(WINDOW_WIDTH / 2.2, 16.0)); // Doesn't exactly center the text
+    // need to get the bounds of the text and use that to calculate the center
 
     Ok(())
   }
@@ -221,7 +232,6 @@ impl State for GameState {
       self.player1.reset();
       self.player2.reset();
       self.ball.reset();
-      println!("Player 2 score: {}", self.player2.score);
     }
 
     if self.ball.position.x > WINDOW_WIDTH {
@@ -229,7 +239,6 @@ impl State for GameState {
       self.player1.reset();
       self.player2.reset();
       self.ball.reset();
-      println!("Player 1 score: {}", self.player1.score);
     }
 
     Ok(())
