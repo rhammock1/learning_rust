@@ -1,6 +1,6 @@
 ## Pong Tutorial
 
-Uses (Tetra)[https://tetra.seventeencups.net/] and follows the provided (tutorial)[https://tetra.seventeencups.net/tutorial].
+Uses [Tetra](https://tetra.seventeencups.net/) and follows the provided [tutorial](https://tetra.seventeencups.net/tutorial).
 
 ### Setup
 Follow the `Creating a Project` section of the tutorial for setup.
