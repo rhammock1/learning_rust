@@ -1,5 +1,8 @@
 # Learning Rust
 
+These are mostly notes from the Rust book and some projects, from the book, and not. 
+In some cases, the notes are in .txt files because there is more text content than Rust code.
+
 
 ## Notes to self
 * start a new project with
