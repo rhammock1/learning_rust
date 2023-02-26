@@ -7,8 +7,13 @@
 // is for the result of any documentation tests. That way our documentation and
 // code are always in sync.
 
+// Tests, by default, run in parallel and capture output generated during the tests.
+// If you don't want to run tests in parallel, then run the command
+// `cargo test -- --test-threads=1`
+// If you want everything printed to the console, then run the command
+// `cargo test -- --show-output`
 
-pub fn add(left: usize, right: usize) -> usize {
+fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
@@ -43,11 +48,20 @@ impl Rectangle {
   }
 }
 
+// Unit Tests
+// The convention is to create a module named `tests` in each file to contain the test
+// functions and to annotate the module with `cfg(test)`.
+// This annotation tells the compiler to compile and run the test code only when
+// you run `cargo test`, not when you run `cargo build`.
+// cfg stands for `configuration` and tells Rust that the following item should only
+// be included given a certain configuration option.
 #[cfg(test)]
 mod tests {
+  // This line brings the all of the tests module's parent's items into scope.
   use super::*;
 
   #[test]
+  #[ignore]
   fn it_works() {
     let result = add(2, 2);
     assert_eq!(result, 4);
