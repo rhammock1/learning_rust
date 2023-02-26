@@ -13,7 +13,7 @@
 // If you want everything printed to the console, then run the command
 // `cargo test -- --show-output`
 
-fn add(left: usize, right: usize) -> usize {
+pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
