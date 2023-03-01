@@ -10,7 +10,11 @@ pub struct Config {
 }
 
 impl Config {
-  pub fn new(args: &Vec<String>) -> Config {
+  pub fn new(args: &Vec<String>) -> Result<Config, &'static str> {
+    if args.len() < 3 {
+      return Err("Not enough arguments");
+    }
+
     let mut query: String = String::new();
     let mut filepath: String = String::new();
     let mut regex: String = String::new();
@@ -44,7 +48,7 @@ impl Config {
       }
     }
 
-    Config { query, filepath, regex }
+    Ok(Config { query, filepath, regex })
   }
 }
 
