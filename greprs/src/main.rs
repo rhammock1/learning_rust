@@ -1,14 +1,15 @@
-use std::env;
-use std::path::Path;
+use std::{
+  env,
+  path::Path,
+};
 
-fn main() {
-  // env::args() can only accept unicode values
-  // env::args_os() can accept any value (but returns an OsString, which is harder to work with)
-  let args: Vec<String> = env::args().collect();
-
-  let mut query = "";
-  let mut filepath = "";
-  let mut regex = "";
+/// Parses the program arguments and returns a tuple of the query, filepath, and regex
+/// # Arguments
+/// * `args` - A vector of the program arguments
+fn parse_program_args(args: Vec<String>) -> (String, String, String) {
+  let mut query: String = String::new();
+  let mut filepath: String = String::new();
+  let mut regex: String = String::new();
   for (i, arg) in args.iter().enumerate() {
     // options generally come before the 
     // query and file path arguments
@@ -26,21 +27,31 @@ fn main() {
 
     match arg.as_str() {
       "-r" | "--regex" => {
-        println!("Regex option found: {}", &args[i + 1].as_str());
-        regex = &args[i + 1].as_str();
+        println!("Regex option found: {}", args[i + 1].to_string());
+        regex = args[i + 1].to_string();
       },
       _ => {
         let path = Path::new(&arg);
         println!("File: {:?}", path);
         if path.exists() {
-          println!("Filepath found: {}", arg.as_str());
-          filepath = arg.as_str();
+          println!("Filepath found: {}", arg.to_string());
+          filepath = arg.to_string();
         } else {
           println!("Query found: {}", arg);
-          query = arg;
+          query = arg.to_string();
         }
       },
     }
   }
+  (query, filepath, regex)
+}
+
+fn main() {
+  // env::args() can only accept unicode values
+  // env::args_os() can accept any value (but returns an OsString, which is harder to work with)
+  let args: Vec<String> = env::args().collect();
+
+  let (query, filepath, regex) = parse_program_args(args);
+
   println!("Query: {}, Filepath: {}, Regex: {}", query, filepath, regex);
 }
