@@ -12,7 +12,7 @@ fn main() {
   });
 
   // Should providing a regex overwrite the query argument?
-  if config.regex != "" {
+  if config.regex {
     println!("Searching file using regex: {}", config.regex);
   } else {
     println!("Searching for {}", config.query);
