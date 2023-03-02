@@ -48,10 +48,8 @@ impl Config {
         _ => {
           let path = Path::new(&args[i]);
           if path.exists() {
-            println!("Filepath found: {}", args[i].to_string());
             filepath = args[i].clone().to_string();
           } else {
-            println!("Query found: {}", args[i]);
             query = args[i].clone().to_string();
           }
         },
@@ -68,7 +66,13 @@ impl Config {
 }
 
 fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-  vec![]
+  let mut results = Vec::new();
+  for line in contents.lines() {
+    if line.contains(query) {
+      results.push(line);
+    }
+  }
+  results
 }
 
 /// Reads the contents of a file
@@ -86,8 +90,9 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
   let contents = read_file_contents(&config.filepath)
     .expect("Something went wrong reading the file");
 
-  println!("With text:\n{}", contents);
-
+  for line in search(config.query.as_str(), contents.as_str()) {
+    println!("{}", line);
+  }
   Ok(())
 }
 
@@ -106,12 +111,27 @@ mod tests {
   fn one_result() {
     let query = "duct";
     let contents = "\
-      Rust:
-      safe, fast, productive.
-      Pick three.";
+Rust:
+safe, fast, productive.
+Pick three.";
 
     assert_eq!(
       vec!["safe, fast, productive."],
+      search(query, contents)
+    );
+  }
+
+  #[test]
+  fn multiple_results() {
+    let query = "e";
+    let contents = "\
+Reese's Puffs
+Reese's Puffs
+Peanut Butter
+Chocolate Flavor";
+
+    assert_eq!(
+      vec!["Reese's Puffs", "Reese's Puffs", "Peanut Butter", "Chocolate Flavor"],
       search(query, contents)
     );
   }
