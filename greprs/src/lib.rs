@@ -67,6 +67,10 @@ impl Config {
   }
 }
 
+fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+  vec![]
+}
+
 /// Reads the contents of a file
 fn read_file_contents(filepath: &String) -> Result<String, Box<dyn Error>> {
   let contents = fs::read_to_string(filepath)?;
@@ -85,4 +89,30 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
   println!("With text:\n{}", contents);
 
   Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  #[should_panic]
+  fn fail_to_read_file() {
+    let filepath = String::from("nonexistent_file.txt");
+    read_file_contents(&filepath).unwrap();
+  }
+
+  #[test]
+  fn one_result() {
+    let query = "duct";
+    let contents = "\
+      Rust:
+      safe, fast, productive.
+      Pick three.";
+
+    assert_eq!(
+      vec!["safe, fast, productive."],
+      search(query, contents)
+    );
+  }
 }
