@@ -21,6 +21,13 @@ pub struct Config {
 
 impl Config {
   pub fn new(args: &Vec<String>) -> Result<Config, &'static str> {
+    if args.len() == 1 {
+      // We could show the error message here,
+      // but the tutorial wants to explain error handling
+      // with `unwrap_or_else`
+      return Err("No arguments provided");
+    }
+    
     let mut query: String = String::new();
     let mut filepath: String = String::new();
     let mut regex: bool = false;
