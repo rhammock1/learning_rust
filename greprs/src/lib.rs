@@ -65,6 +65,7 @@ impl Config {
   }
 }
 
+/// Given a query parameter and file contents, return a vector of lines that contain the query
 fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
   let mut results = Vec::new();
   for line in contents.lines() {
