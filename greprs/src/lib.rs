@@ -67,7 +67,8 @@ impl Config {
   }
 }
 
-pub fn read_file_contents(filepath: &String) -> Result<String, Box<dyn Error>> {
+/// Reads the contents of a file
+fn read_file_contents(filepath: &String) -> Result<String, Box<dyn Error>> {
   let contents = fs::read_to_string(filepath)?;
 
   Ok(contents)
