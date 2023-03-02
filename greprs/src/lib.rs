@@ -1,7 +1,8 @@
 use std::{
+  error::Error,
   fs,
-  process,
   path::Path,
+  process,
 };
 
 /// Self explanatory
@@ -66,9 +67,21 @@ impl Config {
   }
 }
 
-pub fn read_file_contents(filepath: &String) -> String {
-  let contents = fs::read_to_string(filepath)
+pub fn read_file_contents(filepath: &String) -> Result<String, Box<dyn Error>> {
+  let contents = fs::read_to_string(filepath)?;
+
+  Ok(contents)
+}
+
+/// Handles running the logic of the program
+pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
+  // The Box<dyn Error> type is a trait object which allows us
+  // not to specify the exact type of the error
+  // The `dyn` keyword is short for dynamic
+  let contents = read_file_contents(&config.filepath)
     .expect("Something went wrong reading the file");
 
-  contents
+  println!("With text:\n{}", contents);
+
+  Ok(())
 }
