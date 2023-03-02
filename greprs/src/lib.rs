@@ -4,6 +4,14 @@ use std::{
   path::Path,
 };
 
+fn show_help_message() {
+  println!("This is a simple grep clone written in Rust");
+  println!("Usage: greprs [options] query filepath");
+  println!("Options:");
+  println!("  -r, --regex\t\tUse a regex to search the file");
+  println!("  -h, --help\t\tDisplay this help message");
+}
+
 pub struct Config {
   pub query: String,
   pub filepath: String,
@@ -23,11 +31,7 @@ impl Config {
 
       match args[i].as_str() {
         "-h" | "--help" => {
-          println!("This is a simple grep clone written in Rust");
-          println!("Usage: greprs [options] query filepath");
-          println!("Options:");
-          println!("  -r, --regex\t\tUse a regex to search the file");
-          println!("  -h, --help\t\tDisplay this help message");
+          show_help_message();
         },
         "-r" | "--regex" => {
           regex = true;
