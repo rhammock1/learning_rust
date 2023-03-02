@@ -4,6 +4,7 @@ use std::{
   path::Path,
 };
 
+/// Self explanatory
 fn show_help_message() {
   println!("This is a simple grep clone written in Rust");
   println!("Usage: greprs [options] query filepath");
