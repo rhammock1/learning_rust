@@ -6,14 +6,15 @@ fn main() {
   let args: Vec<String> = env::args().collect();
 
   let config = greprs::Config::new(&args).unwrap_or_else(|err| {
-    println!("Problem parsing arguments: {}", err);
+    // Print error message to stderr
+    eprintln!("Problem parsing arguments: {}", err);
     process::exit(1);
   });
 
   // Error handling returned from run
   // We only care about detecting an error
   if let Err(e) = greprs::run(config) {
-    println!("Application error: {}", e);
+    eprintln!("Application error: {}", e);
     process::exit(1);
   }
 }
