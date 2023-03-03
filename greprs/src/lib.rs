@@ -11,13 +11,15 @@ fn show_help_message() {
   println!("Usage: greprs [options] query filepath");
   println!("Options:");
   println!("  -r, --regex\t\tUse a regex to search the file");
+  println!("  -i, --ignore-case\t\tIgnore case when searching the file");
   println!("  -h, --help\t\tDisplay this help message");
 }
 
 pub struct Config {
   pub query: String,
   pub filepath: String,
-  pub regex: bool,
+  regex: bool,
+  ignore_case: bool,
 }
 
 impl Config {
@@ -32,8 +34,8 @@ impl Config {
     let mut query: String = String::new();
     let mut filepath: String = String::new();
     let mut regex: bool = false;
+    let mut ignore_case: bool = false;
 
-    // This still isn't ideal, but we aren't using any external libraries
     for i in 1..args.len() {
       // options generally come before the 
       // query and file path arguments
@@ -44,6 +46,9 @@ impl Config {
         },
         "-r" | "--regex" => {
           regex = true;
+        },
+        "-i" | "--ignore-case" => {
+          ignore_case = true;
         },
         _ => {
           let path = Path::new(&args[i]);
@@ -61,16 +66,29 @@ impl Config {
       process::exit(0);
     }
 
-    Ok(Config { query, filepath, regex })
+    Ok(Config { query, filepath, regex, ignore_case })
   }
 }
 
 /// Given a query parameter and file contents, return a vector of lines that contain the query
-fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-  let query = query.to_lowercase();
+fn search<'a>(
+  query: &str,
+  contents: &'a str,
+  ignore_case: bool,
+) -> Vec<&'a str> {
+  let query = if ignore_case { 
+    query.to_lowercase() 
+  } else { 
+    query.to_string() 
+  };
   let mut results = Vec::new();
   for line in contents.lines() {
-    if line.to_lowercase().contains(&query) {
+    let check = if ignore_case { 
+      line.to_lowercase() 
+    } else { 
+      line.to_string()
+    };
+    if check.contains(&query) {
       results.push(line);
     }
   }
@@ -92,7 +110,11 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
   let contents = read_file_contents(&config.filepath)
     .expect("Something went wrong reading the file");
 
-  for line in search(config.query.as_str(), contents.as_str()) {
+  for line in search(
+    config.query.as_str(), 
+    contents.as_str(),
+    config.ignore_case,
+  ) {
     println!("{}", line);
   }
   Ok(())
@@ -119,7 +141,7 @@ Pick three.";
 
     assert_eq!(
       vec!["safe, fast, productive."],
-      search(query, contents)
+      search(query, contents, false)
     );
   }
 
@@ -134,7 +156,21 @@ Chocolate Flavor";
 
     assert_eq!(
       vec!["Reese's Puffs", "Reese's Puffs", "Peanut Butter", "Chocolate Flavor"],
-      search(query, contents)
+      search(query, contents, false)
+    );
+  }
+
+  #[test]
+  fn case_insensitive() {
+    let query = "rUsT";
+    let contents = "\
+Rust:
+safe, fast, productive.
+Pick three.";
+
+    assert_eq!(
+      vec!["Rust:"],
+      search(query, contents, true)
     );
   }
 }
