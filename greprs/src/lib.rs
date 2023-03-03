@@ -67,9 +67,10 @@ impl Config {
 
 /// Given a query parameter and file contents, return a vector of lines that contain the query
 fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+  let query = query.to_lowercase();
   let mut results = Vec::new();
   for line in contents.lines() {
-    if line.contains(query) {
+    if line.to_lowercase().contains(&query) {
       results.push(line);
     }
   }
