@@ -4,6 +4,7 @@ use std::{
   path::Path,
   process,
 };
+use regex::Regex;
 
 /// Self explanatory
 fn show_help_message() {
@@ -11,7 +12,8 @@ fn show_help_message() {
   println!("Usage: greprs [options] query filepath");
   println!("Options:");
   println!("  -r, --regex\t\tUse a regex to search the file");
-  println!("  -i, --ignore-case\t\tIgnore case when searching the file");
+  println!("\t\t\tRegex should be wrapped in quotes so the shell doesn't interpret it (e.g. \"[a-z]+\\d+\")");
+  println!("  -i, --ignore-case\tIgnore case when searching the file");
   println!("  -h, --help\t\tDisplay this help message");
 }
 
@@ -70,6 +72,17 @@ impl Config {
   }
 }
 
+fn regex_search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+  let mut results = Vec::new();
+  let re = Regex::new(query).unwrap();
+  for line in contents.lines() {
+    if re.is_match(line) {
+      results.push(line);
+    }
+  }
+  results
+}
+
 /// Given a query parameter and file contents, return a vector of lines that contain the query
 fn search<'a>(
   query: &str,
@@ -110,12 +123,21 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
   let contents = read_file_contents(&config.filepath)
     .expect("Something went wrong reading the file");
 
-  for line in search(
-    config.query.as_str(), 
-    contents.as_str(),
-    config.ignore_case,
-  ) {
-    println!("{}", line);
+  if config.regex {
+    for line in regex_search(
+      config.query.as_str(), 
+      contents.as_str(),
+    ) {
+      println!("{}", line);
+    }
+  } else {
+    for line in search(
+      config.query.as_str(), 
+      contents.as_str(),
+      config.ignore_case,
+    ) {
+      println!("{}", line);
+    }
   }
   Ok(())
 }
@@ -171,6 +193,20 @@ Pick three.";
     assert_eq!(
       vec!["Rust:"],
       search(query, contents, true)
+    );
+  }
+
+  #[test]
+  fn search_with_regex() {
+    let query = "hello[0-9]";
+    let contents = "\
+hello1
+hello2
+helloABC";
+
+    assert_eq!(
+      vec!["hello1", "hello2"],
+      regex_search(query, contents)
     );
   }
 }
